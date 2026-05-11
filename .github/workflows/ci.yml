@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "project/**"]
+  pull_request:
+
+jobs:
+  test-and-proof:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Scala CLI
+        shell: bash
+        run: |
+          curl -fL https://github.com/VirtusLab/scala-cli/releases/download/v1.13.0/scala-cli-x86_64-pc-win32.zip -o scala-cli.zip
+          python - <<'PY'
+          import zipfile
+          zipfile.ZipFile("scala-cli.zip").extractall("scala-cli-bin")
+          PY
+
+      - name: Put Scala CLI on PATH
+        shell: pwsh
+        run: |
+          echo "$pwd\scala-cli-bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python proof dependency
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run Scala tests
+        shell: pwsh
+        run: scala-cli.exe test .
+
+      - name: Run API smoke check
+        shell: pwsh
+        run: python scripts\smoke_check.py
+
+      - name: Render screenshots
+        shell: pwsh
+        run: python scripts\render_readme_assets.py
