@@ -69,9 +69,9 @@ flowchart LR
 ## Run Locally
 
 ```powershell
-Set-Location "C:\Users\chaus\dev\repos\policy-decision-simulator"
+cd policy-decision-simulator
 $env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot"
-$env:Path = "$env:JAVA_HOME\bin;C:\Users\chaus\AppData\Local\Microsoft\WinGet\Links;$env:Path"
+$env:Path = "$env:JAVA_HOME\\bin;$env:Path"
 scala-cli run src
 ```
 
@@ -91,7 +91,7 @@ scala-cli run src
 
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot"
-$env:Path = "$env:JAVA_HOME\bin;C:\Users\chaus\AppData\Local\Microsoft\WinGet\Links;$env:Path"
+$env:Path = "$env:JAVA_HOME\\bin;$env:Path"
 scala-cli test .
 py -3.11 -m pip install -r requirements-dev.txt
 py -3.11 scripts\smoke_check.py
