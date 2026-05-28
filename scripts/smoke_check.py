@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import time
 import urllib.request
@@ -9,9 +10,20 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCALA_CLI = Path(r"C:\Program Files\scala-cli-x86_64-pc-win32\scala-cli.exe")
-JAVA_HOME = r"C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot"
 PORT = 4514
+
+# Resolve scala-cli from PATH (CI extracts it to scala-cli-bin and appends
+# that dir to GITHUB_PATH); fall back to a typical Windows install location
+# for local dev where the user may have installed it manually.
+_SCALA_CLI_FROM_PATH = shutil.which("scala-cli") or shutil.which("scala-cli.exe")
+if _SCALA_CLI_FROM_PATH:
+    SCALA_CLI = Path(_SCALA_CLI_FROM_PATH)
+else:
+    SCALA_CLI = Path(r"C:\Program Files\scala-cli-x86_64-pc-win32\scala-cli.exe")
+
+# Honor JAVA_HOME from the environment (setup-java sets it on every runner);
+# only fall back to a typical Windows path for local dev.
+JAVA_HOME = os.environ.get("JAVA_HOME") or r"C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot"
 
 
 def get_json(path: str):
@@ -33,7 +45,8 @@ def post_json(path: str, payload: dict):
 def main() -> None:
     env = os.environ.copy()
     env["JAVA_HOME"] = JAVA_HOME
-    env["PATH"] = JAVA_HOME + r"\bin;" + env["PATH"]
+    java_bin = os.path.join(JAVA_HOME, "bin")
+    env["PATH"] = java_bin + os.pathsep + env.get("PATH", "")
     process = subprocess.Popen(
         [str(SCALA_CLI), "run", "src"],
         cwd=ROOT,
